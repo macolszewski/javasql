@@ -1,5 +1,8 @@
 package bazydanych;
 
+import com.sun.rowset.CachedRowSetImpl;
+
+import javax.sql.rowset.CachedRowSet;
 import java.sql.*;
 
 import java.util.Map;
@@ -13,6 +16,8 @@ public class App {
         App main = new App();
         try {
             Connection connection = main.getConnection();
+            main.readTable(connection, "author");
+            main.readTable(connection, "book");
 //            main.updateTable(connection,"author","name","Janusz","Adam");
 //            main.deleteFromTable(connection,"author","name","Adam");
 //            main.deleteFromTable(connection,"book","nazwa","Ciekawa książka");
@@ -72,13 +77,13 @@ public class App {
     public void insertBook(Connection connection, String name, String ISBN, String surname) throws SQLException {
         Statement statement = connection.createStatement();
         String query = "INSERT into book (nazwa, ISBN, author_id) values (" + "\"" + name + "\", \"" + ISBN + "\"," +
-                "(SELECT author_id FROM author where surname ="+"\"" + surname+"\"));";
+                "(SELECT author_id FROM author where surname =" + "\"" + surname + "\"));";
         statement.execute(query);
         statement.close();
     }
 
     public void updateTable(Connection connection, String table, String field, String search_string, String update_string) {
-        String updateString = "update "+table+" set "+field+" = ? where "+ field +" = ?";
+        String updateString = "update " + table + " set " + field + " = ? where " + field + " = ?";
         PreparedStatement update = null;
         try {
             update = connection.prepareStatement(updateString);
@@ -94,7 +99,7 @@ public class App {
 
 
     public void deleteFromTable(Connection connection, String table, String field, String search_string) {
-        String deleteString = "delete from "+table+" where "+ field +" = ?";
+        String deleteString = "delete from " + table + " where " + field + " = ?";
         PreparedStatement delete = null;
         try {
             delete = connection.prepareStatement(deleteString);
@@ -104,6 +109,27 @@ public class App {
             delete.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void readTable(Connection connection, String table) throws SQLException {
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = null;
+        try {
+            resultSet = statement.executeQuery(("SELECT * FROM " + table));
+//            CachedRowSet cachedRowSet = new CachedRowSetImpl();
+//            cachedRowSet.populate(resultSet);
+            int cols = resultSet.getMetaData().getColumnCount();
+            while (resultSet.next()) {
+                for (int i = 1; i <= cols; i++) {
+                    System.out.print(resultSet.getString(i) + " | ");
+                }
+                System.out.println();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            statement.close();
         }
     }
 
